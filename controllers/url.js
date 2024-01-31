@@ -28,12 +28,13 @@ export const redirectUrl = async (req, res) => {
   const entry = await Url.findOne({ shortId });
   if (!entry) {
     res.status(404).json({ error: "No url found" });
+  } else {
+    await Url.updateOne(
+      { shortId },
+      { $push: { visitHistory: { timeStamp: Date.now() } } }
+    );
+    res.redirect(entry.redirectUrl);
   }
-  await Url.updateOne(
-    { shortId },
-    { $push: { visitHistory: { timeStamp: Date.now() } } }
-  );
-  res.redirect(entry.redirectUrl);
 };
 
 export const getAnalytics = async (req, res) => {
@@ -44,9 +45,10 @@ export const getAnalytics = async (req, res) => {
   const entry = await Url.findOne({ shortId });
   if (!entry) {
     res.status(404).json({ error: "No url found" });
+  } else {
+    res.status(200).json({
+      totalClicks: entry.visitHistory?.length,
+      visitHistory: entry.visitHistory,
+    });
   }
-  res.status(200).json({
-    totalClicks: entry.visitHistory.length,
-    visitHistory: entry.visitHistory,
-  });
 };
